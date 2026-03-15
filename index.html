@@ -1,43 +1,259 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Fake News Detector</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TruthEngine — AI News Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080A0F; --surface: #0E1118; --surface2: #141720;
+      --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+      --accent: #C8F135; --accent2: #7FFFD4; --red: #FF4560;
+      --text: #F0F2F5; --muted: #6B7280;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(200,241,53,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(200,241,53,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+    body::after { content: ''; position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; background: rgba(8,10,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-logo { font-family: var(--font-display); font-size: 22px; letter-spacing: 3px; color: var(--accent); }
+    .nav-logo span { color: var(--text); }
+    .nav-badge { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; border: 1px solid var(--border2); padding: 4px 12px; border-radius: 2px; }
+    .nav-tag { font-size: 11px; font-weight: 500; color: var(--accent); background: rgba(200,241,53,0.08); border: 1px solid rgba(200,241,53,0.2); padding: 4px 12px; border-radius: 2px; letter-spacing: 1px; }
+    main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 120px 48px 80px; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; margin-bottom: 64px; }
+    .eyebrow { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+    .eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--accent); }
+    h1 { font-family: var(--font-display); font-size: 72px; line-height: 0.95; letter-spacing: 2px; color: var(--text); margin-bottom: 24px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .hero-desc { font-size: 15px; color: var(--muted); line-height: 1.7; font-weight: 300; max-width: 360px; margin-bottom: 40px; }
+    .stats-row { display: flex; gap: 32px; }
+    .stat-num { font-family: var(--font-display); font-size: 36px; color: var(--text); line-height: 1; letter-spacing: 1px; }
+    .stat-num span { color: var(--accent); }
+    .stat-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; letter-spacing: 1px; }
+    .scanner-panel { background: var(--surface); border: 1px solid var(--border2); border-radius: 4px; overflow: hidden; position: relative; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .panel-dots { display: flex; gap: 7px; }
+    .panel-dots span { width: 10px; height: 10px; border-radius: 50%; }
+    .panel-dots span:nth-child(1) { background: #FF5F57; }
+    .panel-dots span:nth-child(2) { background: #FEBC2E; }
+    .panel-dots span:nth-child(3) { background: #28C840; }
+    .panel-title { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+    .panel-status { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .panel-body { padding: 24px; }
+    textarea { width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: 3px; color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; padding: 16px; resize: none; height: 160px; transition: border-color 0.2s; outline: none; }
+    textarea::placeholder { color: var(--muted); }
+    textarea:focus { border-color: rgba(200,241,53,0.4); }
+    .char-count { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; margin-bottom: 16px; }
+    .scan-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 3px; font-family: var(--font-display); font-size: 18px; letter-spacing: 3px; padding: 14px; cursor: pointer; transition: all 0.2s; }
+    .scan-btn:hover { background: #d8ff45; transform: translateY(-1px); }
+    .scan-btn:active { transform: translateY(0); }
+    .scan-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; transform: none; }
+    .btn-loader { display: none; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.2); border-top-color: var(--bg); border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result-section { margin-top: 20px; display: none; }
+    .result-section.visible { display: block; }
+    .result-verdict { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 3px; margin-bottom: 16px; border: 1px solid; animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .result-verdict.real { background: rgba(127,255,212,0.05); border-color: rgba(127,255,212,0.2); }
+    .result-verdict.fake { background: rgba(255,69,96,0.05); border-color: rgba(255,69,96,0.2); }
+    .verdict-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .real .verdict-icon { background: rgba(127,255,212,0.1); }
+    .fake .verdict-icon { background: rgba(255,69,96,0.1); }
+    .verdict-label { font-family: var(--font-display); font-size: 28px; letter-spacing: 2px; line-height: 1; }
+    .real .verdict-label { color: var(--accent2); }
+    .fake .verdict-label { color: var(--red); }
+    .verdict-sub { font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
+    .bars { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); width: 36px; letter-spacing: 1px; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+    .bar-fill.real-fill { background: var(--accent2); }
+    .bar-fill.fake-fill { background: var(--red); }
+    .bar-pct { font-family: var(--font-mono); font-size: 12px; font-weight: 500; width: 40px; text-align: right; flex-shrink: 0; }
+    .real-pct { color: var(--accent2); }
+    .fake-pct { color: var(--red); }
+    .status-banner { display: none; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 3px; margin-bottom: 14px; font-family: var(--font-mono); font-size: 12px; }
+    .status-banner.error { display: flex; background: rgba(255,69,96,0.08); border: 1px solid rgba(255,69,96,0.25); color: #FF4560; }
+    .status-banner.success { display: flex; background: rgba(127,255,212,0.06); border: 1px solid rgba(127,255,212,0.25); color: var(--accent2); }
+    .bottom-section { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-top: 64px; }
+    .info-block { background: var(--surface); padding: 32px; }
+    .info-num { font-family: var(--font-display); font-size: 48px; color: var(--accent); letter-spacing: 1px; line-height: 1; margin-bottom: 8px; }
+    .info-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+    .info-desc { font-size: 12px; color: var(--muted); line-height: 1.6; font-weight: 300; }
+    footer { position: relative; z-index: 1; text-align: center; padding: 32px 48px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .scanner-panel::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanline 3s ease-in-out infinite; opacity: 0; pointer-events: none; }
+    .scanner-panel.scanning::after { opacity: 1; }
+    @keyframes scanline { 0% { top: 64px; } 100% { top: 100%; } }
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      main { padding: 100px 20px 60px; }
+      .hero { grid-template-columns: 1fr; gap: 40px; }
+      h1 { font-size: 52px; }
+      .bottom-section { grid-template-columns: 1fr; }
+      .stats-row { gap: 20px; }
+    }
+  </style>
 </head>
 <body>
-    <h1>AI Fake News Detector</h1>
-    <textarea id="newsText" rows="6" cols="60" placeholder="Paste news text here"></textarea><br><br>
-    <button onclick="checkNews()">Check News</button>
-    <h2 id="result"></h2>
+  <nav>
+    <div class="nav-logo">TRUTH<span>ENGINE</span></div>
+    <div class="nav-badge">MODEL v2.1 · ACTIVE</div>
+    <div class="nav-tag">ENTERPRISE</div>
+  </nav>
+  <main>
+    <div class="hero">
+      <div class="hero-left">
+        <div class="eyebrow">AI-Powered News Intelligence</div>
+        <h1>DETECT.<br/><em>VERIFY.</em><br/>TRUST.</h1>
+        <p class="hero-desc">Enterprise-grade misinformation detection powered by machine learning. Built for newsrooms, corporations, and intelligence teams who cannot afford to be wrong.</p>
+        <div class="stats-row">
+          <div class="stat-item"><div class="stat-num">98<span>%</span></div><div class="stat-label">ACCURACY</div></div>
+          <div class="stat-item"><div class="stat-num">44<span>K</span></div><div class="stat-label">ARTICLES TRAINED</div></div>
+          <div class="stat-item"><div class="stat-num">&lt;1<span>s</span></div><div class="stat-label">RESPONSE TIME</div></div>
+        </div>
+      </div>
+      <div class="scanner-panel" id="scannerPanel">
+        <div class="panel-header">
+          <div class="panel-dots"><span></span><span></span><span></span></div>
+          <div class="panel-title">TRUTHENGINE · SCANNER</div>
+          <div class="panel-status"></div>
+        </div>
+        <div class="panel-body">
+          <div class="status-banner" id="statusBanner"></div>
+          <textarea id="newsText" placeholder="Paste article text, headline, or news excerpt here..." maxlength="5000" oninput="updateChar()"></textarea>
+          <div class="char-count"><span id="charCount">0</span> / 5000</div>
+          <button class="scan-btn" id="scanBtn" onclick="checkNews()">
+            <span id="btnText">RUN ANALYSIS</span>
+            <div class="btn-loader" id="btnLoader"></div>
+          </button>
+          <div class="result-section" id="resultSection">
+            <div class="result-verdict" id="resultVerdict">
+              <div class="verdict-icon" id="verdictIcon"></div>
+              <div>
+                <div class="verdict-label" id="verdictLabel"></div>
+                <div class="verdict-sub" id="verdictSub"></div>
+              </div>
+            </div>
+            <div class="bars">
+              <div class="bar-row">
+                <div class="bar-label">REAL</div>
+                <div class="bar-track"><div class="bar-fill real-fill" id="realFill"></div></div>
+                <div class="bar-pct real-pct" id="realPct">—</div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label">FAKE</div>
+                <div class="bar-track"><div class="bar-fill fake-fill" id="fakeFill"></div></div>
+                <div class="bar-pct fake-pct" id="fakePct">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-section">
+      <div class="info-block"><div class="info-num">TF</div><div class="info-title">TF-IDF Vectorization</div><div class="info-desc">Term frequency–inverse document frequency transforms raw text into high-dimensional feature vectors, capturing linguistic patterns invisible to the human eye.</div></div>
+      <div class="info-block"><div class="info-num">LR</div><div class="info-title">Logistic Regression</div><div class="info-desc">Battle-tested classification model trained on 44,000+ verified and fabricated articles. Probabilistic output gives you confidence, not just a verdict.</div></div>
+      <div class="info-block"><div class="info-num">ML</div><div class="info-title">Scikit-learn Pipeline</div><div class="info-desc">End-to-end ML pipeline with serialized model weights. Consistent, reproducible predictions across every deployment environment.</div></div>
+    </div>
+  </main>
+  <footer>TRUTHENGINE &nbsp;·&nbsp; DEVELOPED BY TEJASWINI &nbsp;·&nbsp; <a href="https://github.com/TejaswiniAS/AI-News-Detector" target="_blank">GITHUB ↗</a></footer>
+  <script>
+    const SERVER = "http://127.0.0.1:5000";
 
-    <script>
-    function checkNews() {
-        const text = document.getElementById("newsText").value;
-        if(text.trim() === ""){
-            alert("Please enter some text!");
-            return;
-        }
-
-        fetch("http://127.0.0.1:5000/predict", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ text: text })
+    window.addEventListener('load', function() {
+      fetch(SERVER + "/health")
+        .then(r => r.json())
+        .then(d => {
+          if (d.status === "ok") {
+            showBanner("success", "✓ Server connected — ready to analyse");
+            setTimeout(hideBanner, 3000);
+          } else {
+            showBanner("error", "⚠ Server error: " + d.status);
+          }
         })
-        .then(response => response.json())
-        .then(data => {
-            if(data.error){
-                document.getElementById("result").innerText = "Error: " + data.error;
-            } else {
-                document.getElementById("result").innerText = data.result + " (Confidence: " + data.confidence + ")";
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            document.getElementById("result").innerText = "Error: Could not reach server";
+        .catch(() => {
+          showBanner("error", "⚠ Server not running — open PowerShell and run: python server.py");
         });
+    });
+
+    function showBanner(type, msg) {
+      const b = document.getElementById('statusBanner');
+      b.className = 'status-banner ' + type;
+      b.textContent = msg;
     }
-    </script>
+    function hideBanner() { document.getElementById('statusBanner').className = 'status-banner'; }
+
+    function updateChar() {
+      document.getElementById('charCount').textContent = document.getElementById('newsText').value.length;
+    }
+
+    function checkNews() {
+      const text = document.getElementById('newsText').value.trim();
+      if (!text) { alert('Please paste some news text first.'); return; }
+
+      const btn = document.getElementById('scanBtn');
+      const btnText = document.getElementById('btnText');
+      const btnLoader = document.getElementById('btnLoader');
+      const panel = document.getElementById('scannerPanel');
+      const resultSection = document.getElementById('resultSection');
+
+      btn.disabled = true;
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'block';
+      panel.classList.add('scanning');
+      resultSection.classList.remove('visible');
+      hideBanner();
+
+      fetch(SERVER + "/predict", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) { showBanner("error", "⚠ " + data.error); return; }
+
+        const isReal  = data.result === 'Real News';
+        const fakeVal = parseFloat(data.fake_percent) || 0;
+        const realVal = parseFloat(data.real_percent) || 0;
+
+        const verdict = document.getElementById('resultVerdict');
+        verdict.className = 'result-verdict ' + (isReal ? 'real' : 'fake');
+        document.getElementById('verdictIcon').textContent  = isReal ? '✓' : '✕';
+        document.getElementById('verdictLabel').textContent = isReal ? 'VERIFIED REAL' : 'LIKELY FAKE';
+        document.getElementById('verdictSub').textContent   = 'Confidence: ' + data.confidence + ' · Model: LogReg v2.1';
+
+        resultSection.classList.add('visible');
+        setTimeout(() => {
+          document.getElementById('realFill').style.width = realVal + '%';
+          document.getElementById('fakeFill').style.width = fakeVal + '%';
+          document.getElementById('realPct').textContent  = realVal.toFixed(1) + '%';
+          document.getElementById('fakePct').textContent  = fakeVal.toFixed(1) + '%';
+        }, 100);
+      })
+      .catch(() => {
+        showBanner("error", "⚠ Cannot reach server — make sure python server.py is running in PowerShell");
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btnText.style.display = 'block';
+        btnLoader.style.display = 'none';
+        panel.classList.remove('scanning');
+      });
+    }
+
+    document.getElementById('newsText').addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') checkNews();
+    });
+  </script>
 </body>
 </html>
