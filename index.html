@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Fake News Detector</title>
+</head>
+<body>
+    <h1>AI Fake News Detector</h1>
+    <textarea id="newsText" rows="6" cols="60" placeholder="Paste news text here"></textarea><br><br>
+    <button onclick="checkNews()">Check News</button>
+    <h2 id="result"></h2>
+
+    <script>
+    function checkNews() {
+        const text = document.getElementById("newsText").value;
+        if(text.trim() === ""){
+            alert("Please enter some text!");
+            return;
+        }
+
+        fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error){
+                document.getElementById("result").innerText = "Error: " + data.error;
+            } else {
+                document.getElementById("result").innerText = data.result + " (Confidence: " + data.confidence + ")";
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById("result").innerText = "Error: Could not reach server";
+        });
+    }
+    </script>
+</body>
+</html>
